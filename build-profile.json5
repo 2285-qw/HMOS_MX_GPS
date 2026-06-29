@@ -1,0 +1,68 @@
+{
+  "app": {
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "C:\\Users\\22850\\.ohos\\config\\default_MyApplication_3HPQqb17lfIuIHORu7P2DJD5gALJNtZ_5XU4T_YfFRw=.cer",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001A505012D57496701E5F117EEF7FE71CD29A633A71BCD46CB9C51788BFFD5E3882B816F181FDAA",
+          "profile": "C:\\Users\\22850\\.ohos\\config\\111Debug.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "C:\\Users\\22850\\.ohos\\config\\default_MyApplication_3HPQqb17lfIuIHORu7P2DJD5gALJNtZ_5XU4T_YfFRw=.p12",
+          "storePassword": "0000001AFC8F0A501C8006980AA4AA0F0724DA8DC42387CFA7C12E1EBB222763F9D2E979349AD072FABE"
+        }
+      }
+    ],
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+        "targetSdkVersion": "5.1.1(19)",
+        "compatibleSdkVersion": "5.1.1(19)",
+        "runtimeOS": "HarmonyOS",
+        "buildOption": {
+          "nativeCompiler": "BiSheng",
+          "strictMode": {
+            "caseSensitiveCheck": true,
+            "useNormalizedOHMUrl": true
+          }
+        }
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug"
+      },
+      {
+        "name": "release"
+      }
+    ],
+    "capabilities": [
+      {
+        "bundleName": "com.vison.myapplication",
+        "config": [
+          {
+            "name": "Map Kit",
+            "capability": "com.huawei.service.mapkit"
+          }
+        ]
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
+}

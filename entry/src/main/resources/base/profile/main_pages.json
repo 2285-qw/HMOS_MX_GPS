@@ -1,0 +1,20 @@
+{
+  "src": [
+    "pages/Index",
+    "pages/Page",
+    "pages/WelcomePage",
+    "pages/VideoPage",
+    "pages/UsbMonitorComponent",
+    "pages/UsbAccessoryMonitor",
+    "pages/LogExportPage",
+    "pages/BasePage",
+    "pages/LanGuangPage",
+    "pages/MapPage",
+    "pages/LogListPage",
+    "pages/LogDetailPage",
+    "pages/MediaAlbum",
+    "pages/SeekPlanePage",
+    "pages/FlightPage",
+    "pages/LightPage"
+  ]
+}

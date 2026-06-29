@@ -1,0 +1,69 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "module description"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "新睦 GPS DRONE"
+    },
+    {
+      "name": "reason",
+      "value": "获取网络状态"
+    },
+    {
+      "name": "UsbReason",
+      "value": "获取usb连接设备"
+    },
+    {
+      "name": "UsbOn",
+      "value": "获取usb后台监听"
+    },
+    {
+      "name": "AnalysisListener_desc",
+      "value": "description"
+    },
+    {
+      "name": "AnalysisListener_label",
+      "value": "label"
+    },
+    {
+      "name": "log_w",
+      "value": "需要读取日志文件"
+    },
+    {
+      "name": "log_r",
+      "value": "需要写入日志文件"
+    },
+    {
+      "name": "record",
+      "value": "需要写入日志文件"
+    },
+    {
+      "name": "sound",
+      "value": "用于录制屏幕声音"
+    },
+    {
+      "name": "location",
+      "value": "用于精准定位"
+    },
+    {
+      "name": "a_location",
+      "value": "基础位置服务"
+    },
+    {
+      "name": "database",
+      "value": "存储数据"
+    },
+    {
+      "name": "usb_",
+      "value": "usb配件权限"
+    }
+
+  ]
+}
