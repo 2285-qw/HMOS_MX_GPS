@@ -6,6 +6,7 @@ import { window, promptAction } from '@kit.ArkUI';
 import EntryAbility from '../entryability/EntryAbility';
 import { PlayInfo, StreamType } from '../model/PlayInfo';
 import { ConnectionStatusListener } from '../listeners/ConnectionStatusListener';
+
 //import image from '@ohos.multimedia.image';
 import { BusinessError } from '@ohos.base';
 import { camera } from '@kit.CameraKit';
@@ -78,65 +79,57 @@ export struct VideoPage {
               // 不设置Surface，直接启动解码器
               // NapiBuffer.start();
               // 2. 设置回调
-              /*  NapiBuffer.setCallbacks(
-                  (frame) => {
-                    console.log(`回调数据收到帧: ${frame.width}x${frame.height}, timestamp: ${frame.timestamp}， data: ${frame.data}`);
-                    // 处理帧数据...
-                  },
-                  (errorCode) => {
-                    console.error(`回调数据解码错误: ${errorCode}`);
-                  },
-                  (formatInfo) => {
-                    console.log(`回调数据格式变更: ${formatInfo.width}x${formatInfo.height}, format: ${formatInfo.format}`);
-                  }
-                );*/
+              /*   NapiBuffer.setCallbacks(
+                   (frame) => {
+                     console.log(`回调数据收到帧: ${frame.width}x${frame.height}, timestamp: ${frame.timestamp}， data: ${frame.data}`);
+                     // 处理帧数据...
+                   },
+                   (errorCode) => {
+                     console.error(`回调数据解码错误: ${errorCode}`);
+                   },
+                   (formatInfo) => {
+                     console.log(`回调数据格式变更: ${formatInfo.width}x${formatInfo.height}, format: ${formatInfo.format}`);
+                   }
+                 );*/
+             // NapiBuffer.start();
               const i = NapiBuffer.setSurface(BigInt(surfaceId));
 
-              console.error(`绑定ui: ${i}`);
-
-              /*  // 获取NativeWindow
-                let nativeWindow = this.getUIContext.getNativeWindow()
-                if (nativeWindow) {
-                  // 调用Native方法，设置Surface
-                  // 假设有一个Native方法叫setNativeWindow
-                  NapiBuffer.setSurface(nativeWindow);
-                  // 这里需要调用Native模块
-                  // 例如：nativeModule.setNativeWindow(nativeWindow)
-                  console.log('获取到NativeWindow')
-                }*/
+              // console.error(`绑定ui: ${i}`);
 
 
-              AppStorage.Set<boolean>('isDecode', true);
-              /*   const b=   AppStorage.get<boolean>('isDecode')
-                 promptAction.showToast({
-                   message: 'Hello World:${b}'+b,
-                   duration: 2000
-                 });*/
+            /*  setInterval(() => {
+                let frame = NapiBuffer.getDecodedFrame();
+                if (frame) {
+                  // 处理帧数据
+                  let data = frame.data; // 例如绘制到 Canvas
+                  console.debug("上层获取到一帧数据")
+                }
+              }, 33); // ~30fps*/
 
 
-              // 3. 解码数据
-              const data: Uint8Array | null = this.readHexFile();
-              console.log(`数据` + ObjectUtils.arrayBufferToHex(data));
-              console.log(`数据长度` + data?.length);
-              if (data != null) {
-                const timestamp = Date.now() * 1000; // 转换为微秒
-                //  let  timestamp: bigint =BigInt( Date.now()) * 1000n; // 转换为微秒
-                NapiBuffer.decodeFrame(data, timestamp, true);
+              /*   // 3. 解码数据
+                 const data: Uint8Array | null = this.readHexFile();
+                 console.log(`数据` + ObjectUtils.arrayBufferToHex(data));
+                 console.log(`数据长度` + data?.length);
+                 if (data != null) {
+                   const timestamp = Date.now() * 1000; // 转换为微秒
+                   //  let  timestamp: bigint =BigInt( Date.now()) * 1000n; // 转换为微秒
+                   NapiBuffer.decodeFrame(data, timestamp, true);
 
 
-                // 4. 获取解码器信息
-                const info = NapiBuffer.getInfo();
-                console.log(`解码器信息: ${JSON.stringify(info)}`);
+                   // 4. 获取解码器信息
+                   const info = NapiBuffer.getInfo();
+                   console.log(`解码器信息: ${JSON.stringify(info)}`);
 
-                // 5. 使用完毕后释放资源
-                // NapiBuffer.release()
-              } else {
-                console.log(`数据为空`);
-              }
+                   // 5. 使用完毕后释放资源
+                   // NapiBuffer.release()
+                 } else {
+                   console.log(`数据为空`);
+                 }
 
-              const data1: VideoFrame | null = NapiBuffer.getDecodedFrame()
+                 const data1: VideoFrame | null = NapiBuffer.getDecodedFrame()
 
-              console.log(`解码器信息: ${data1}`);
+                 console.log(`解码器信息: ${data1}`);*/
 
 
             })
@@ -194,7 +187,7 @@ export struct VideoPage {
     //监听连接状态开始视频流心跳
     EntryAbility.getInstance().setConnectionStatusListener(this.connectionStatusListener);
     // 持续订阅
-    emitter.on({ eventId:ModeType.Page },
+    emitter.on({ eventId: ModeType.Page },
       (eventData: emitter.GenericEventData<PageSendData>) => {
         // console.log("收到蓝光功能字信息:", JSON.stringify(eventData));
 

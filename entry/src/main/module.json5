@@ -195,6 +195,16 @@
           ],
           "when": "always"
         }
+      },
+      {
+        "name": "ohos.permission.VIBRATE",
+        "reason": "$string:VIBRATE",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility"
+          ],
+          "when": "always"
+        }
       }
     ]
   }

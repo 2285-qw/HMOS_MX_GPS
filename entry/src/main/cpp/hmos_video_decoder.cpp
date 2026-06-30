@@ -83,7 +83,8 @@ bool HmosVideoDecoder::initialize(const std::string &mimeType, int32_t width, in
     mimeType_ = mimeType;
 
     LOGI("初始化解码器: %{public}s,%{public}dx%{public}d", mimeType.c_str(), width, height);
-
+    LOGI("初始化解码器: %{public}s,%{public}dx%{public}d", mimeType.c_str(), width_, height_);
+  LOGI("配置解码器参数====2222: %{public}dx%{public}d", width_, height_);
     // 根据MIME类型选择对应的常量
     const char *mimeConst = nullptr;
     if (mimeType == "video/avc") {
@@ -129,8 +130,9 @@ bool HmosVideoDecoder::initialize(const std::string &mimeType, int32_t width, in
         started_ = true;
         return true;
     }
-
+  LOGI("初始化解码器====: %{public}s,%{public}dx%{public}d", mimeType.c_str(), width_, height_);
     // 配置解码器
+    LOGI("配置解码器参数====1111: %{public}dx%{public}d", width_, height_);
     if (!configureDecoder()) {
         LOGE("Failed to configure decoder");
         OH_VideoDecoder_Destroy(decoder_);
@@ -309,7 +311,7 @@ VideoFramePtr HmosVideoDecoder::getDecodedFrame(int32_t timeoutMs) {
                 lock.lock();
             }
         }
-
+        LOGI("decodedFrames_ size==== = %{public}zu", decodedFrames_.size());
         if (decodedFrames_.empty()) {
             LOGD("getDecodedFrame11111==empty");
             return nullptr;
@@ -415,11 +417,18 @@ void HmosVideoDecoder::OnStreamChanged(OH_AVCodec *codec, OH_AVFormat *format, v
     HmosVideoDecoder *decoder = static_cast<HmosVideoDecoder *>(userData);
     if (format && decoder) {
         int32_t width = 0, height = 0, pixelFormat = 0;
-        OH_AVFormat_GetIntValue(format, OH_MD_KEY_WIDTH, &width);
+     /*   OH_AVFormat_GetIntValue(format, OH_MD_KEY_WIDTH, &width);
         OH_AVFormat_GetIntValue(format, OH_MD_KEY_HEIGHT, &height);
+        OH_AVFormat_GetIntValue(format, OH_MD_KEY_PIXEL_FORMAT, &pixelFormat);*/
+        
+          // 2. 获取图像的真实有效尺寸 (关键!)
+        OH_AVFormat_GetIntValue(format, OH_MD_KEY_VIDEO_PIC_WIDTH, &width);
+        OH_AVFormat_GetIntValue(format, OH_MD_KEY_VIDEO_PIC_HEIGHT, &height);
+        
         OH_AVFormat_GetIntValue(format, OH_MD_KEY_PIXEL_FORMAT, &pixelFormat);
 
         LOGI("Output format changed: %{public}dx%{public}d, pixel format: %{public}d", width, height, pixelFormat);
+         LOGI("Output format changed: %{public}dx%{public}d, pixel format: %{public}d",  decoder->width_,  decoder->height_, pixelFormat);
 
         // 更新解码器尺寸
         decoder->width_ = width;
@@ -562,7 +571,7 @@ bool HmosVideoDecoder::processPendingInputs() {
 
 void HmosVideoDecoder::processAvailableOutput(uint32_t index, OH_AVBuffer *buffer) {
     framesDecoded_++;
-
+    LOGI("数据回调中====1111");
     if (surface_) {
         // Surface模式：渲染到Surface
         processOutputBufferToSurface(index, buffer);
@@ -572,6 +581,7 @@ void HmosVideoDecoder::processAvailableOutput(uint32_t index, OH_AVBuffer *buffe
     } else {
         // 内存模式：创建VideoFrame
         VideoFramePtr frame = createVideoFrameFromBuffer(index, buffer);
+        LOGI("数据回调中====");
         if (frame) {
             if (frameCallback_) {
                 frameCallback_(frame);
@@ -584,6 +594,7 @@ void HmosVideoDecoder::processAvailableOutput(uint32_t index, OH_AVBuffer *buffe
     }
 }
 
+// 处理解码后的数据
 void HmosVideoDecoder::handleOutputBufferInCallback(uint32_t index, OH_AVBuffer *buffer) {
     // 这个方法在回调线程中直接调用，避免使用OH_VideoDecoder_GetOutputBuffer
 
@@ -609,6 +620,13 @@ void HmosVideoDecoder::handleOutputBufferInCallback(uint32_t index, OH_AVBuffer 
     framesDecoded_++;
 
     if (surface_) {
+       /* // 先拷贝数据（如果需要）
+        VideoFramePtr frame = createVideoFrameFromBuffer(index, buffer);
+        if (frame) {
+            std::lock_guard<std::mutex> lock(frameMutex_);
+            decodedFrames_.push_back(frame);
+            outputCond_.notify_one();
+        }*/
         // Surface模式：直接在回调中渲染
         int32_t ret = OH_VideoDecoder_RenderOutputBuffer(decoder_, index);
         LOGE("urface模式22222222222");
@@ -625,18 +643,21 @@ void HmosVideoDecoder::handleOutputBufferInCallback(uint32_t index, OH_AVBuffer 
         // 内存模式：在回调中创建VideoFrame
         VideoFramePtr frame = createVideoFrameFromBuffer(index, buffer);
 
-        LOGE("urface模式==================");
+        LOGE("urface模式 false");
         if (frame) {
-            LOGE("urface模式============11111111111");
-            if (frameCallback_) {
-                // 在回调线程中直接调用回调
-                frameCallback_(frame);
-            } else {
-                // 存入队列
-                std::lock_guard<std::mutex> lock(frameMutex_);
-                decodedFrames_.push_back(frame);
-                outputCond_.notify_one(); // 通知有新的帧可用
-            }
+            LOGE("urface模式 false 111");
+            /*    if (frameCallback_) {
+                    // 在回调线程中直接调用回调
+                    frameCallback_(frame);
+                } else {*/
+            LOGE("urface模式 false 数据存入队列 ");
+            // 存入队列
+            std::lock_guard<std::mutex> lock(frameMutex_);
+            decodedFrames_.push_back(frame);
+            outputCond_.notify_one(); // 通知有新的帧可用
+            LOGE("urface模式 false 数据存入队列 ");
+            LOGI("decodedFrames_ size = %{public}zu", decodedFrames_.size());
+            //}
         }
 
         // 释放输出缓冲区
@@ -664,8 +685,9 @@ VideoFramePtr HmosVideoDecoder::createVideoFrameFromBuffer(uint32_t index, OH_AV
 
     // 获取输出格式
     OH_AVFormat *outputFormat = OH_VideoDecoder_GetOutputDescription(decoder_);
+    
 
-    int32_t width = width_, height = height_, pixelFormat = AV_PIXEL_FORMAT_NV21;
+    int32_t width = width_, height = height_, pixelFormat = AV_PIXEL_FORMAT_NV12;
     if (outputFormat) {
         OH_AVFormat_GetIntValue(outputFormat, OH_MD_KEY_WIDTH, &width);
         OH_AVFormat_GetIntValue(outputFormat, OH_MD_KEY_HEIGHT, &height);
@@ -696,8 +718,9 @@ VideoFramePtr HmosVideoDecoder::createVideoFrameFromBuffer(uint32_t index, OH_AV
         generateTestImage(frame);
     }
 
-    LOGD("解码已创建视频帧: %{public}dx%{public}d, timestamp=%{public}lld, size=%{public}zu", width, height, timestamp,
-         frame->data.size());
+    LOGD("解码已创建视频帧: %{public}dx%{public}d, timestamp=%{public}lld, size=%{public}zu, attr.size=%{public}lld,",
+         width, height, timestamp, frame->data.size()),
+        attr.size;
     return frame;
 }
 
@@ -723,10 +746,11 @@ bool HmosVideoDecoder::configureDecoder() {
     } else if (mimeType_ == "video/hevc") {
         mimeConst = OH_AVCODEC_MIMETYPE_VIDEO_HEVC;
     }
-
+  LOGI("配置解码器参数====: %{public}dx%{public}d", width_, height_);
     OH_AVFormat_SetStringValue(format_, OH_MD_KEY_CODEC_MIME, mimeConst);
     OH_AVFormat_SetIntValue(format_, OH_MD_KEY_WIDTH, width_);
     OH_AVFormat_SetIntValue(format_, OH_MD_KEY_HEIGHT, height_);
+     LOGI("配置解码器参数: %{public}dx%{public}d", width_, height_);
     // OH_AVFormat_SetIntValue(format_, OH_MD_KEY_PIXEL_FORMAT, AV_PIXEL_FORMAT_NV21);
 
     // 配置解码器
@@ -1069,6 +1093,22 @@ bool HmosVideoDecoder::StreamRecording(int32_t fd, int32_t width, int32_t height
     return true;
 }
 
+
+/**
+ *设置录像参数
+ *
+ */
+// 码流录制视频
+void HmosVideoDecoder::SetRecordingType(int32_t videoType, int32_t videoFrameRate, int32_t videoSpeed) {
+    videoType_ = videoType;
+    videoFrameRate_ = videoFrameRate;
+    videoSpeed_ = videoSpeed;
+    LOGI("录像模式设置, ret=%{public}d,", videoType_);
+    LOGI("录像模式设置, ret=%{public}d,", videoFrameRate_);
+    LOGI("录像模式设置, ret=%{public}d,", videoSpeed_);
+}
+
+
 // 码流录制视频添加数据
 bool HmosVideoDecoder::addRecordingData(const uint8_t *data, size_t size, int64_t timestamp, uint32_t flags) {
     if (muxer_ && isRecording_) {
@@ -1080,7 +1120,26 @@ bool HmosVideoDecoder::addRecordingData(const uint8_t *data, size_t size, int64_
             }
             return false;
         }
+        frameNumer++;
+        LOGI("录像模式, ret=%{public}d,", videoSpeed_);
+        LOGI("录像模式, videoFrameRate_=%{public}d,", videoFrameRate_);
+        // 延时模式
+        if (videoType_ == 1) {
+            // 1. 检查是否为关键帧（I帧）
+            bool isKeyFrame = (flags & AVCODEC_BUFFER_FLAGS_SYNC_FRAME) != 0;
+            if (!isKeyFrame) {
+                // 非关键帧直接丢弃，防止解码依赖链断裂
+                return false;
+            }
 
+            // 2. 关键帧计数
+            keyFrameCount++;
+            if ((frameNumer - 1) % videoSpeed_ != 0) {
+                return false;
+            }
+        }
+        LOGI("帧数量, ret=%{public}d,", frameNumer);
+        LOGI("帧数量 关键帧, videoFrameRate_=%{public}d,", keyFrameCount);
         int32_t n;
         if (size <= INT32_MAX) {
             n = static_cast<int32_t>(size); // 安全
@@ -1111,19 +1170,29 @@ bool HmosVideoDecoder::addRecordingData(const uint8_t *data, size_t size, int64_
         // 8. 设置帧的时间戳和同步帧标志
         OH_AVCodecBufferAttr attr;
 
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-        int64_t t = (uint64_t)tv.tv_sec * 1000000 + tv.tv_usec;
+        // 根据不同的模式设置时间戳
+        if (videoType_ == 0) {
+            // 获取当前时间
+            struct timeval tv;
+            gettimeofday(&tv, NULL);
+            int64_t t = (uint64_t)tv.tv_sec * 1000000 + tv.tv_usec;
 
-        // attr.pts = frameNumer * 100000; // 显示时间戳
-        attr.pts = t - timestampR; // 显示时间戳
-        attr.size = n;             // 数据大小
+            // attr.pts = frameNumer * 100000; // 显示时间戳
+            attr.pts = t - timestampR; // 显示时间戳
+        } else if (videoType_ == 1) {
+            int groupIndexCeil = (frameNumer + videoSpeed_ - 1) / videoSpeed_;
+            int time = 1000000 / videoFrameRate_;
+            // 延时拍摄
+            attr.pts = groupIndexCeil * time; // 显示时间戳
+        }
+
+        attr.size = n; // 数据大小
         attr.flags = flags;
         attr.offset = 0;
 
         // 9. 将属性关联到 buffer
         OH_AVBuffer_SetBufferAttr(sample, &attr);
-         LOGI("录制添加一帧音视频数据, ret=%{public}d,", isRecording_);
+        LOGI("录制添加一帧音视频数据, ret=%{public}d,", isRecording_);
         // 10. 将 buffer 写入封装器
         int ret = OH_AVMuxer_WriteSampleBuffer(muxer_, videoTrackId, sample);
         /*  if (ret != AV_ERR_OK) {
@@ -1135,9 +1204,9 @@ bool HmosVideoDecoder::addRecordingData(const uint8_t *data, size_t size, int64_
 
 
         LOGI("录制添加一帧音视频数据, ret=%{public}d,", ret);
-        LOGI("录制添加一帧音视频数据, timestamp=%{public}lld,", t - timestampR);
+        // LOGI("录制添加一帧音视频数据, timestamp=%{public}lld,", t - timestampR);
 
-        frameNumer++;
+
         /*  // 6. 停止并销毁资源
           OH_AVMuxer_Stop(muxer_);
           OH_AVMuxer_Destroy(muxer_);*/

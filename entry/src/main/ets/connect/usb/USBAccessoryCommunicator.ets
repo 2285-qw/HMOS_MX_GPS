@@ -291,8 +291,8 @@ export class USBAccessoryCommunicator {
         } else if (header[2] == 0x06) {
           //udp连接类型
           const uint8Array = new Uint8Array(newData);
-          console.log("收到udp数据", "uint8Array=" + ObjectUtils.arrayBufferToHex(uint8Array),
-            this.onHandleDataListener);
+        /*  console.log("收到udp数据", "uint8Array=" + ObjectUtils.arrayBufferToHex(uint8Array),
+            this.onHandleDataListener);*/
           this.onHandleDataListener?.onHandleData(ConnectionType.UDP, ExternalDevType.USB, uint8Array)
         } else if (header[2] == 0x05) {
           //TCP连接类型

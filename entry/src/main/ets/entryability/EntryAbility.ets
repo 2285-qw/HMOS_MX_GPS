@@ -152,7 +152,7 @@ export default class EntryAbility extends UIAbility {
     // 绑定本地端口（可选，根据需求配置）
     // 3. 注册接收数据回调（用于接收服务器响应）
     this.udpSocket.on('message', (packet: socket.SocketMessageInfo) => {
-      console.error(`收到来UDP数据：${ObjectUtils.arrayBufferToHex(packet.message)}==========+${new Uint8Array(packet.message)}`);
+     // console.error(`收到来UDP数据：${ObjectUtils.arrayBufferToHex(packet.message)}==========+${new Uint8Array(packet.message)}`);
       // 处理接收到的数据（如解析、展示等）
 
       //处理收到UDP数据
@@ -329,7 +329,7 @@ export default class EntryAbility extends UIAbility {
   }
   private analysisListener: AnalysisListener = {
     data: (type: number, data?: Uint8Array) => {
-      console.log(`收到蓝光功能字解析类型`, type);
+      //console.log(`收到蓝光功能字解析类型`, type);
       const context = this.context;
       this.sendEvent(type, data);
     }
@@ -355,12 +355,12 @@ export default class EntryAbility extends UIAbility {
 
   private onHandleDataListener: OnHandleDataListener = {
     onHandleData: (connectionType: ConnectionType, devTypes: ExternalDevType, data: Uint8Array) => {
-      console.log(`处理数据 - 连接类型: ${connectionType}, 设备类型: ${devTypes}, 数据: ${ObjectUtils.arrayBufferToHex(data)}`);
+     // console.log(`处理数据 - 连接类型: ${connectionType}, 设备类型: ${devTypes}, 数据: ${ObjectUtils.arrayBufferToHex(data)}`);
       // 这里可以添加具体的数据处理逻辑
       // 示例：根据连接类型和设备类型进行不同处理
       switch (connectionType) {
         case ConnectionType.UDP:
-          console.debug("收到udp数据===")
+          //console.debug("收到udp数据===")
           //处理udp数据
           DeviceInfoManager.getInstance().processDeviceInfo(data)
           DataNoticeManager.getInstance().processUdpNotification(data)
@@ -508,7 +508,7 @@ export default class EntryAbility extends UIAbility {
       }
       if (ProtocolManager.getInstance().hasProtocol()) {
         DroneCodeManager.getInstance().setProtocol(ProtocolManager.getInstance().getProtocol());
-        console.log("无人机协议", ProtocolManager.getInstance().getNewProtocolName());
+       // console.log("无人机协议", ProtocolManager.getInstance().getNewProtocolName());
         let parse = ParseUtils.newInstance(ProtocolManager.getInstance().getProtocol());
         if (parse != null) {
           let packet: MessagePacket | null;

@@ -354,7 +354,7 @@ static napi_value Initialize(napi_env env, napi_callback_info info) {
     int32_t width, height;
     napi_get_value_int32(env, args[1], &width);
     napi_get_value_int32(env, args[2], &height);
-    
+    LOGI("配置解码器参数====2222: %{public}dx%{public}d", width, height);
     // 调用解码器初始化
     bool success = g_decoderContext.decoder->initialize(std::string(mimeType), width, height);
     g_decoderContext.isInitialized = success;
@@ -388,7 +388,7 @@ static napi_value SetSurface(napi_env env, napi_callback_info info) {
     
     // 设置Surface
     bool success = g_decoderContext.decoder->setSurface(static_cast<OHNativeWindow*>(nativeWindow));
-    
+     LOGI("VideoDecoder NAPI module initialized (global decoder mode)====");
     // 返回结果
     napi_value result;
     napi_get_boolean(env, success, &result);

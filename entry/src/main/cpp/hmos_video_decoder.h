@@ -142,6 +142,8 @@ public:
 
     // 码流录制视频
     bool StreamRecording(int32_t fd, int32_t width, int32_t height);
+    // 设置录像参数
+    void SetRecordingType(int32_t fd, int32_t width, int32_t height);
     // 码流录制视频添加数据
     bool addRecordingData(const uint8_t *data, size_t size, int64_t timestamp, uint32_t flags);
     // 码流录制视频停止销毁
@@ -247,6 +249,10 @@ private:
     int64_t timestampR;        // 视频录制时间戳
     bool isKeyFrame;           // 录制第一帧是否是关键帧
     int64_t frameNumer;        // 视频录制帧数
+    int64_t keyFrameCount = 0;
+    int videoType_ = 0;       // 录像模式 0正常录制 1延时摄影 2慢动作
+    int videoSpeed_ = 4;      // 延时和慢动作倍数
+    int videoFrameRate_ = 20; // 录像帧率
 
     // 回调函数
     OnFrameDecodedCallback frameCallback_;

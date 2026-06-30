@@ -197,7 +197,9 @@ struct WelcomePage {
             if (isR) {
               //跳转到控制页面
               //有权限跳转页面
-              RouteHelper.pushUrl('pages/LanGuangPage');
+             RouteHelper.pushUrl('pages/LanGuangPage');
+              //RouteHelper.pushUrl('pages/NewVideoPage');
+
             } else {
               //没有权限
               promptAction.showToast({

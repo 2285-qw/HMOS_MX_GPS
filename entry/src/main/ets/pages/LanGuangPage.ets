@@ -75,6 +75,9 @@ import { MyDataProvider } from '../database/MyDataProvider';
 import { FlightRecordUtils } from '../database/FlightRecordUtils';
 import { PreferencesUtil } from '../macrochip/utils/PreferencesUtil';
 import { VSollbar } from '../macrochip/view/VSollbar';
+import { TLPSpeedDialog } from '../macrochip/Dialog/TLPSpeedDialog';
+import { TLPSpeedParams } from '../macrochip/Dialog/DialogDataType/TLPSpeedParams';
+import { VideoUtils } from '../macrochip/utils/VideoUtils';
 
 
 @Entry
@@ -87,8 +90,8 @@ struct LanGuangPage {
   @State gps_level: Resource = $r('app.media.ic_gps_0'); //gps数量等级
   @State geomagnetism: Resource = $r('app.media.ic_magnetic_red') //地磁资源
   @State top_title: string = ''; //头部显示文本
-  @State currentMode: Mode = Mode.PHOTO; //拍照模式
-  @State shutMode: ShootingType = ShootingType.NO; //拍照选择样式
+  @State currentMode: Mode = Mode.PHOTO; //拍照模式 显示用
+  @State shutMode: ShootingType = ShootingType.NO; //拍照选择样式 实际样式
   @State isRecording: boolean = false; //是否录像中
   @State TF_S?: string = ''; //tf卡状态
   // 右侧弹窗：是否显示、当前选中的类型（用类型驱动右侧页面，确保点击左侧能切换）
@@ -114,7 +117,6 @@ struct LanGuangPage {
   private lgFollowThread?: LgFollowThread;
   private data?: MoreParams; //左侧列表数据
   private imageSettingData?: ImageSettingParams; //图像调节列表
-  private isRecord: boolean = false; //是否录制中
   private file: fs.File | null = null; //录像文件
   @State flyHeight: number = -1; //高度
   @State horizontalSpeed: number = -1 // /** 水平速度（米/秒） */
@@ -140,6 +142,7 @@ struct LanGuangPage {
   @State zoomValue: number = 1;
   private zoomMiValue: number = 1;
   private zoomMaxValue: number = 5;
+  @State TclSpeed: number = 4 //延时拍摄速率
 
   build() {
     Stack() {
@@ -505,12 +508,13 @@ struct LanGuangPage {
             mode: this.currentMode,
             isRecording: this.isRecording
           }).onClick(() => {
-            if (this.currentMode === Mode.PHOTO) {
+            if (this.shutMode === ShootingType.PHOTO || this.shutMode === ShootingType.NO) {
               console.info("拍照");
               // 在这里调用拍照逻辑
               // Utils.sendEvent(ProtocolManager.getInstance().getProtocol(), MessageWhat.MESSAGE_PHOTOS)
               SendEmitterUtil.sendEvent(MessageWhat.MESSAGE_PHOTOS)
-            } else if (this.currentMode === Mode.RECORD) {
+            } else if (this.shutMode === ShootingType.RECORD) {
+              console.debug('正常录像')
               // 录像模式：点击开始/停止录像
               this.isRecording = !this.isRecording;
               // 保存到沙箱目录
@@ -526,11 +530,10 @@ struct LanGuangPage {
                 let fd = this.file.fd;
                 console.info("开始录像");
                 this.textTimerController.start()
-                this.isRecord = true;
+                NapiBuffer.SetRecordingType(0, PlayInfo.frameRate, 0)
                 NapiBuffer.StreamRecording(fd, Resolution.V_1280);
               } else {
                 console.info("停止录像");
-                this.isRecord = false;
                 NapiBuffer.StopRecording();
                 this.textTimerController.pause()
                 this.textTimerController.reset()
@@ -539,12 +542,17 @@ struct LanGuangPage {
                   console.log("视频保存路径", this.file.path)
                 }
               }
-            } else if (this.currentMode === Mode.SCALE) {
+            } else if (this.shutMode === ShootingType.DELAY) {
               // 延时模式：点击开始/停止
               this.isRecording = !this.isRecording;
               if (this.isRecording) {
+                this.textTimerController.start()
+                VideoUtils.StreamTCLRecording(this.TclSpeed)
                 console.info("开始延时摄影");
               } else {
+                this.textTimerController.pause()
+                this.textTimerController.reset()
+                VideoUtils.StopRecording()
                 console.info("停止延时摄影");
               }
             }
@@ -1200,6 +1208,29 @@ struct LanGuangPage {
     }
   }
 
+  //延时拍摄弹窗
+  setTLPSpeedDialog() {
+    let wrappedBuilder = wrapBuilder<[TLPSpeedParams]>(TLPSpeedDialog)
+    let data = new TLPSpeedParams()
+    data.setOnSpeedClick((value: number) => {
+      this.TclSpeed = value
+    })
+    data.speed = this.TclSpeed
+
+    const customContent = new ComponentContent(
+      this.uiContext, // 传入UIContext
+      wrappedBuilder, // @Builder函数
+      data
+    );
+    data.dialogId = customContent;
+    data.uiContext = this.uiContext
+    this.uiContext.getPromptAction().openCustomDialog(customContent, {
+      alignment: DialogAlignment.Bottom,
+      offset: { dx: 0, dy: -60 } // 向左偏移 10vp，避免完全贴边
+    })
+
+  }
+
   disCalibrationDialog() {
     if (this.dialogId != undefined) {
       this.uiContext?.getPromptAction().closeCustomDialog(this.dialogId)
@@ -1213,6 +1244,15 @@ struct LanGuangPage {
     let data = new ShootingSelectionParams(this.uiContext)
     data.setonItemClick((arrMoreBean: ShootingType) => {
       this.shutMode = arrMoreBean
+      console.log('模式选中', this.shutMode)
+      if (this.shutMode == ShootingType.PHOTO) {
+        this.currentMode = Mode.PHOTO
+      } else {
+        this.currentMode = Mode.RECORD
+      }
+      if (this.shutMode == ShootingType.DELAY) {
+        this.setTLPSpeedDialog()
+      }
     })
     data.arrMoreBean = this.shutMode
     const customContent = new ComponentContent(

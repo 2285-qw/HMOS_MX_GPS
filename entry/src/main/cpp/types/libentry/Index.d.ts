@@ -1,10 +1,13 @@
-
-
 export const add: (a: number, b: number) => number;
+
 export const createVideoStream: (a: number) => boolean;
-export const addVideoStream: (a: Uint8Array, b: number)=>void;
-export const getVideoOneFrameArray: (a: Uint8Array, b: boolean)=>ArrayBuffer;
+
+export const addVideoStream: (a: Uint8Array, b: number) => void;
+
+export const getVideoOneFrameArray: (a: Uint8Array, b: boolean) => ArrayBuffer;
+
 export const CreateFixedArrayBuffer: (a: number) => ArrayBuffer;
+
 export const start: () => void;
 
 
@@ -12,8 +15,10 @@ export const start: () => void;
  * usb环形buf相关
  * */
 export const createUsbStream: () => void;
-export const addUsbStream: (data: Uint8Array, length: number)=>void;
-export const getUsbOneFrame: (data: Array<number>)=>Uint8Array;
+
+export const addUsbStream: (data: Uint8Array, length: number) => void;
+
+export const getUsbOneFrame: (data: Array<number>) => Uint8Array;
 
 // videodecoder.d.ts 或 VideoDecoder.ts
 
@@ -25,34 +30,33 @@ export const getUsbOneFrame: (data: Array<number>)=>Uint8Array;
  * 视频帧对象接口
  */
 export interface VideoFrame {
-  width: number;       // 帧宽度
-  height: number;      // 帧高度
-  stride: number;      // 行跨度
-  timestamp: number;   // 时间戳（单位：微秒）
-  format: number;      // 像素格式
-  data: Uint8Array;    // 帧数据（YUV格式）
+  width: number; // 帧宽度
+  height: number; // 帧高度
+  stride: number; // 行跨度
+  timestamp: number; // 时间戳（单位：微秒）
+  format: number; // 像素格式
+  data: Uint8Array; // 帧数据（YUV格式）
 }
 
 /**
  * 格式变更信息接口
  */
 export interface FormatChangedInfo {
-  width: number;      // 新的宽度
-  height: number;     // 新的高度
-  format: number;     // 新的像素格式
+  width: number; // 新的宽度
+  height: number; // 新的高度
+  format: number; // 新的像素格式
 }
 
 /**
  * 解码器信息接口
  */
 export interface DecoderInfo {
-  width: number;      // 当前视频宽度
-  height: number;     // 当前视频高度
+  width: number; // 当前视频宽度
+  height: number; // 当前视频高度
   initialized: boolean; // 是否已初始化
-  started: boolean;   // 是否已启动解码
+  started: boolean; // 是否已启动解码
   surfaceMode: boolean; // 是否为Surface渲染模式
 }
-
 
 
 /**
@@ -79,7 +83,7 @@ export const initialize: (mimeType: string, width: number, height: number) => bo
  * 设置Surface用于渲染模式
  * @param nativeWindow NativeWindow对象，通常从XComponent获取
  */
-export const setSurface: (nativeWindow:number|bigint) => boolean;
+export const setSurface: (nativeWindow: number | bigint) => boolean;
 
 /**
  * 设置解码器回调函数
@@ -98,7 +102,7 @@ export const setCallbacks: (
  * @param frameData Uint8Array类型的数据
  * @param timestamp 帧时间戳（单位：微秒）
  */
-export const decodeFrame: (frameData: Uint8Array, timestamp: number,isI:boolean) => boolean;
+export const decodeFrame: (frameData: Uint8Array, timestamp: number, isI: boolean) => boolean;
 
 /**
  * 获取已解码的帧（同步方式）
@@ -138,10 +142,14 @@ export const getInfo: () => DecoderInfo;
  * 录制相关
  * */
 //开始录制
-export const  StreamRecording : (fd:number,VideoSize:{width: number, height: number}) => void;
+export const StreamRecording: (fd: number, VideoSize: { width: number, height: number }) => void;
+
+//设置录像参数
+export const SetRecordingType: (videoType: number, videoFrameRate: number, videoSpeed: number) => void;
+
 
 /*停止录制*/
-export const  StopRecording : () => void;
+export const StopRecording: () => void;
 
 
 

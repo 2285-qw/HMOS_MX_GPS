@@ -30,7 +30,7 @@ export class DataNoticeManager {
   }
 
   public processUdpNotification(data: Uint8Array, analysisListener?: AnalysisListener) {
-    console.debug("收到udp数据==="+ObjectUtils.arrayBufferToHex(data))
+    //console.debug("收到udp数据==="+ObjectUtils.arrayBufferToHex(data))
     if (data.length >= 5 && data[0] == 0x70 && data[1] == 0x68 && data[2] == 0x6f && data[3] == 0x74) {
       //70686f746f photo
       /* if (analysisListener != null) {
@@ -202,7 +202,7 @@ export class DataNoticeManager {
           SendEmitterUtil.sendEventObject(SwitchType.NOTIFY_DEPTH_INFO, data)
         }
     } else if (WifiCommandHelper.checkFF3519(data)) {
-      console.debug("收到海思信息数据")
+      //console.debug("收到海思信息数据")
       //海思数据
       let type = ObjectUtils.toInt(data[4]);
       //远程获取到得图片信息

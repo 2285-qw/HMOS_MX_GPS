@@ -33,8 +33,8 @@ export class DeviceInfoManager {
 
   public processDeviceInfo(data: Uint8Array) {
     const deviceVal = ObjectUtils.arrayBufferToHex(data)
-    console.error(`收到来UDP数据：${ObjectUtils.arrayBufferToHex(data)}==========${data.length}${data.length >= 11 &&
-      data[0] == 0xAA && data[1] == 0xFF}`);
+   /* console.error(`收到来UDP数据：${ObjectUtils.arrayBufferToHex(data)}==========${data.length}${data.length >= 11 &&
+      data[0] == 0xAA && data[1] == 0xFF}`);*/
     if (deviceVal == null) {
       console.error(`==========`);
       return
@@ -62,7 +62,7 @@ export class DeviceInfoManager {
       }
 
     } else if (data.length >= 11 && data[0] == 0xAA && data[1] == 0xFF) {
-      console.error(`收到来UDP数据：${ObjectUtils.arrayBufferToHex(data)}==========`);
+      //console.error(`收到来UDP数据：${ObjectUtils.arrayBufferToHex(data)}==========`);
       PlayInfo.setPlayInfo(data);
       this.initNewDeviceType(data);
       this.initResolution();
@@ -140,7 +140,7 @@ export class DeviceInfoManager {
 
 
     if (PlayInfo.deviceType != DeviceType.NONE || PlayInfo.deviceId != 0) {
-      console.log("已获取到设备信息", PlayInfo.deviceId, PlayInfo.deviceType);
+     // console.log("已获取到设备信息", PlayInfo.deviceId, PlayInfo.deviceType);
 
       //  onDeviceTypeListener.onNewDevice(mExternalDevType);
 

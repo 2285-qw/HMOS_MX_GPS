@@ -63,7 +63,12 @@
     {
       "name": "usb_",
       "value": "usb配件权限"
+    },
+    {
+      "name": "VIBRATE",
+      "value": "震动"
     }
+
 
   ]
 }

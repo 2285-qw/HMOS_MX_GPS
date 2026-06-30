@@ -1,57 +1,33 @@
 export class TLPSpeedParams {
-  title: string = "";
-  text:string='';
-  img:Resource=$r('app.media.ic_cal_level_0');
+  speed: number = 4;
   dialogId?: ComponentContent;
   uiContext?: UIContext;
-  isGif:boolean=false;
-  magesData: Array<ImageFrameInfo> = [
-    { src: $r('app.media.ic_cal_level_0'), duration: 100 }, // 每帧图片和持续时间(ms)
-
-  ];//动图列表
+  minValue: number = 4;
+  maxValue: number = 50;
+  onSpeedClick?: (speed: number) => void
 
   constructor() {
 
   }
 
-  setLevelType(){
-    this.title="水平校准"
-    this.text="请把飞行器水平放置"
-    this.img=$r('app.media.ic_cal_level_0');
-    this.isGif=false;
+  setSpeed(speed: number) {
+    this.speed = speed;
+    return this;
   }
 
-  setCompassLevelType(){
-    this.title="罗盘水平校准"
-    this.text="请把飞行器水平旋转2–3圈"
-    this.magesData=[
-      { src: $r('app.media.ic_cal_level_0'), duration: 100 },
-      { src: $r('app.media.ic_cal_level_1'), duration: 100 },
-      { src: $r('app.media.ic_cal_level_2'), duration: 100 },
-      { src: $r('app.media.ic_cal_level_3'), duration: 100 },
-      { src: $r('app.media.ic_cal_level_4'), duration: 100 },
-      { src: $r('app.media.ic_cal_level_5'), duration: 100 },
-      { src: $r('app.media.ic_cal_level_6'), duration: 100 }, // 每帧图片和持续时间(ms)
 
-    ];//动图列表
-    this.isGif=true;
-
+  setDialogId(dialogId: ComponentContent) {
+    this.dialogId = dialogId;
+    return this;
   }
 
-  setCompassVerticalType(){
-    this.title="罗盘水平校准"
-    this.text="请握住飞行器，机头朝下，旋转2–3圈"
-    this.magesData=[
-      { src: $r('app.media.ic_cal_vertical_0'), duration: 100 },
-      { src: $r('app.media.ic_cal_vertical_1'), duration: 100 },
-      { src: $r('app.media.ic_cal_vertical_2'), duration: 100 },
-      { src: $r('app.media.ic_cal_vertical_3'), duration: 100 },
-      { src: $r('app.media.ic_cal_vertical_4'), duration: 100 },
-      { src: $r('app.media.ic_cal_vertical_5'), duration: 100 },
-      { src: $r('app.media.ic_cal_vertical_6'), duration: 100 }, // 每帧图片和持续时间(ms)
+  setUIContext(uiContext: UIContext) {
+    this.uiContext = uiContext;
+    return this;
+  }
 
-    ];//动图列表
-    this.isGif=true;
-
+  setOnSpeedClick(onSpeedClick: (speed: number) => void) {
+    this.onSpeedClick = onSpeedClick;
+    return this;
   }
 }

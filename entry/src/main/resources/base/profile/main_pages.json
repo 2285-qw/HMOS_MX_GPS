@@ -15,6 +15,7 @@
     "pages/MediaAlbum",
     "pages/SeekPlanePage",
     "pages/FlightPage",
-    "pages/LightPage"
+    "pages/LightPage",
+    "pages/NewVideoPage"
   ]
 }

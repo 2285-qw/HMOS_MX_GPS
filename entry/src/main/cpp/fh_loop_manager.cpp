@@ -10,7 +10,6 @@
 #include <stdint.h>
 
 
-
 /*#include "hmos_video_decoder.h"*/
 #include <stdint.h>
 #include <stdio.h>
@@ -147,7 +146,6 @@ napi_value FHLoopManager::addVideoStream(napi_env env, napi_callback_info data) 
         }
         // 更新写入位置
         BLBDATA_AdvSetWritePos(FHLoopManager::GetInstance().myVideoLoopBufHandle, iRecvLen);
-       
     }
     // BLBDATA_Unlock(FHLoopManager::GetInstance().myVideoLoopBufHandle);
     return nullptr;
@@ -208,7 +206,7 @@ napi_value FHLoopManager::getVideoOneFrameArray(napi_env env, napi_callback_info
 
     if (!BLBDATA_GetOneFrame(FHLoopManager::GetInstance().myVideoLoopBufHandle, (char *)&stHead,
                              FHLoopManager::GetInstance().pVideoFrame.get(), 0)) {
-       // OH_LOG_FATAL(LOG_APP, "帧数据 没有取到");
+        // OH_LOG_FATAL(LOG_APP, "帧数据 没有取到");
         return nullptr;
     }
 
@@ -578,14 +576,17 @@ static napi_value CreateVideoFrameObject(napi_env env, const VideoFramePtr &fram
     // 创建 ArrayBuffer 存储帧数据
     napi_value arrayBuffer;
     size_t totalSize = frame->data.size();
-
     void *data = nullptr;
     napi_create_arraybuffer(env, totalSize, &data, &arrayBuffer);
-    if (data && !frame->data.empty()) {
+    if (data && totalSize > 0) {
         memcpy(data, frame->data.data(), totalSize);
     }
 
-    // 设置属性
+    // 创建 Uint8Array 视图（符合 ArkTS 接口要求）
+    napi_value uint8Array;
+    napi_create_typedarray(env, napi_uint8_array, totalSize, arrayBuffer, 0, &uint8Array);
+
+    // 设置数值属性
     napi_value widthValue;
     napi_create_int32(env, frame->width, &widthValue);
     napi_set_named_property(env, result, "width", widthValue);
@@ -606,7 +607,8 @@ static napi_value CreateVideoFrameObject(napi_env env, const VideoFramePtr &fram
     napi_create_int32(env, frame->format, &formatValue);
     napi_set_named_property(env, result, "format", formatValue);
 
-    napi_set_named_property(env, result, "data", arrayBuffer);
+    // 设置 data 为 Uint8Array
+    napi_set_named_property(env, result, "data", uint8Array);
 
     return result;
 }
@@ -1030,18 +1032,17 @@ static napi_value DecodeFrameTypedArray(napi_env env, napi_callback_info info) {
 
     // 获取时间戳
     int64_t timestamp;
-     napi_status status1 = napi_get_value_int64(env, args[1], &timestamp);
+    napi_status status1 = napi_get_value_int64(env, args[1], &timestamp);
     if (status != napi_ok) {
-        LOGI("int64位数据接受失败%{public}PRId64",status1);
+        LOGI("int64位数据接受失败%{public}PRId64", status1);
         return nullptr;
     }
-    
-     struct timeval tv;
+
+    struct timeval tv;
     gettimeofday(&tv, NULL);
     timestamp = (uint64_t)tv.tv_sec * 1000000 + tv.tv_usec;
 
-    
-    
+
     LOGI("时间戳数据C层, timestamp=%{public}lld,", timestamp);
     // 调用解码
     bool success = g_decoderContext.decoder->decodeFrame(static_cast<uint8_t *>(bufferData), length, timestamp,
@@ -1216,7 +1217,7 @@ static napi_value createUsbStream(napi_env env, napi_callback_info info) {
 
 static napi_value addUsbStream(napi_env env, napi_callback_info info) {
 // Java_com_vison_sdk_VNDK_addUsbStream(JNIEnv *env, jclass clazz, jbyteArray data, jint data_length) {
-     OH_LOG_FATAL(LOG_APP, "进入addUsbStream");
+    OH_LOG_FATAL(LOG_APP, "进入addUsbStream");
     if (myUsbLoopBufDataHandle == nullptr) {
         OH_LOG_FATAL(LOG_APP, "addUsb错误 myUsbLoopBufDataHandle is null");
         return nullptr;
@@ -1269,7 +1270,7 @@ static napi_value addUsbStream(napi_env env, napi_callback_info info) {
 
     // 从Java数组拷贝数据到C层缓冲区
     memcpy(byteData.get(), jsData, inputNum); // 最稳定的拷贝方式
-    
+
     int iRecvLen = inputNum;
     LBUF_Lock(myUsbLoopBufDataHandle);
     LBUF_Write(myUsbLoopBufDataHandle, byteData.get(), iRecvLen);
@@ -1444,17 +1445,17 @@ static napi_value StreamRecording(napi_env env, napi_callback_info info) {
     size_t argc = 2;
     napi_value args[2];
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-    
+
     int32_t fd = -1;
     napi_get_value_int32(env, args[0], &fd);
     OH_LOG_INFO(LOG_APP, "[C++] Received FD: %{public}d", fd);
-    
+
     if (fd < 0) {
         OH_LOG_ERROR(LOG_APP, "[C++] Invalid FD");
         napi_throw_error(env, nullptr, "Invalid FD");
         return nullptr;
     }
-     // 检查是否为对象
+    // 检查是否为对象
     napi_valuetype type;
     napi_typeof(env, args[1], &type);
     if (type != napi_object) {
@@ -1470,14 +1471,66 @@ static napi_value StreamRecording(napi_env env, napi_callback_info info) {
     int32_t width, height;
     napi_get_value_int32(env, width_val, &width);
     napi_get_value_int32(env, height_val, &height);
-    
 
-    //需要接受一个路径传递过去
-    g_decoderContext.decoder->StreamRecording(fd,width,height);
 
- 
+    // 需要接受一个路径传递过去
+    g_decoderContext.decoder->StreamRecording(fd, width, height);
+
     return nullptr;
 }
+
+
+// 静态 NAPI 方法：设置录像模式及参数
+static napi_value SetRecordingType(napi_env env, napi_callback_info info) {
+    size_t argc = 3;    // 期望的参数个数
+    napi_value args[3]; // 用于存储接收到的参数
+    napi_value result = nullptr;
+
+    // 1. 获取传入的实际参数和个数
+    napi_status status = napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    if (status != napi_ok) {
+        napi_throw_error(env, nullptr, "Failed to get callback info");
+        return nullptr;
+    }
+
+    // 2. 检查参数个数是否符合预期
+    if (argc < 3) {
+        napi_throw_error(env, nullptr, "Expected at least 3 arguments");
+        return nullptr;
+    }
+
+    // 3. 分别将前三个参数转换为 int32_t
+    int32_t videoType = 0, videoFrameRate = 20, videoSpeed = 4;
+
+    // 转换第一个参数
+    status = napi_get_value_int32(env, args[0], &videoType);
+    if (status != napi_ok) {
+        napi_throw_error(env, nullptr, "Argument 1 must be an integer");
+        return nullptr;
+    }
+
+    // 转换第二个参数
+    status = napi_get_value_int32(env, args[1], &videoFrameRate);
+    if (status != napi_ok) {
+        napi_throw_error(env, nullptr, "Argument 2 must be an integer");
+        return nullptr;
+    }
+
+    // 转换第三个参数
+    status = napi_get_value_int32(env, args[2], &videoSpeed);
+    if (status != napi_ok) {
+        napi_throw_error(env, nullptr, "Argument 3 must be an integer");
+        return nullptr;
+    }
+    LOGI("录像模式设置, ret=%{public}d,", videoType);
+    LOGI("录像模式设置, ret=%{public}d,", videoFrameRate);
+    LOGI("录像模式设置, ret=%{public}d,", videoSpeed);
+    g_decoderContext.decoder->SetRecordingType(videoType, videoFrameRate, videoSpeed);
+    // 5. 返回 undefined（或可返回其他值）
+    napi_get_undefined(env, &result);
+    return result;
+}
+
 
 // NAPI: 停止录制
 static napi_value StopRecording(napi_env env, napi_callback_info info) {
@@ -1515,6 +1568,7 @@ static napi_value Init(napi_env env, napi_value exports) {
         // 录制方法
         {"StreamRecording", nullptr, StreamRecording, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"StopRecording", nullptr, StopRecording, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"SetRecordingType", nullptr, SetRecordingType, nullptr, nullptr, nullptr, napi_default, nullptr},
 
     };
 
