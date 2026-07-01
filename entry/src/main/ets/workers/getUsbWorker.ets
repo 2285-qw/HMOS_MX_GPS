@@ -49,16 +49,6 @@ function startReading(bufferSize: number): void {
 
     try {
       const buffer = new ArrayBuffer(bufferSize);
-
-      /*   try {
-           const stat = fileIo.statSync(fileDescriptor);
-           console.debug("usb读取数据",'文件信息:', stat);
-         } catch (e) {
-           console.error("usb读取数据",'文件描述符无效:', e);
-           return;
-         }*/
-
-      console.debug("usb读取数据", '1111111110--------', fileDescriptor, buffer, bufferSize)
       const bytesRead = fileIo.readSync(fileDescriptor, buffer, {
         offset: 0,
         length: bufferSize,
@@ -109,70 +99,71 @@ function startNewReading(bufferSize: number): void {
   if (isReading || fileDescriptor <= 0) {
     return;
   }
-
   isReading = true;
-
   const buffer = new ArrayBuffer(bufferSize);
+  try {
+    // 将 fileIo.read 转换为 Promise
+    const readAsync = (): Promise<number> => {
+      return new Promise((resolve, reject) => {
+        const callback = (err: Error | null, bytesRead: number): void => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(bytesRead);
+          }
+        };
+        fileIo.read(
+          fileDescriptor,
+          buffer,
+          {
+            offset: 0,
+            length: bufferSize,
+          },
+          callback
+        );
+      });
+    };
 
-  // 将 fileIo.read 转换为 Promise
-  const readAsync = (): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const callback = (err: Error | null, bytesRead: number): void => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(bytesRead);
-        }
-      };
-      fileIo.read(
-        fileDescriptor,
-        buffer,
-        {
-          offset: 0,
-          length: bufferSize,
-        },
-        callback
-      );
-    });
-  };
-
-  // 使用立即执行的异步函数，内部使用 while 循环
-  (async () => {
-    while (isReading) {
-      try {
-        const bytesRead = await readAsync();
-
-        if (bytesRead > 0) {
-          const data = new Uint8Array(buffer, 0, bytesRead);
-          console.error("把数据放入一次循环", buffer.byteLength)
-          console.error('usb读取数据', 'Worker读取错误');
-          NapiBuffer.addUsbStream(data, bytesRead);
-          // 不再需要 setTimeout，直接继续循环
-        } else {
-          // 无数据时，主动让出控制权，避免 CPU 空转
-          await new Promise<void>(resolve => setTimeout(resolve, 1));
-        }
-      } catch (error) {
-        // 判断是否可恢复错误
-        let isRecoverable = false;
-        if (error && typeof error === 'object') {
-          const errObj = error as ErrorWithCode;
-          if (errObj.code === 'EAGAIN' || errObj.code === 'EWOULDBLOCK') {
-            isRecoverable = true;
+    // 使用立即执行的异步函数，内部使用 while 循环
+    (async () => {
+      while (isReading) {
+        try {
+          const bytesRead = await readAsync();
+          if (bytesRead > 0) {
+            const data = new Uint8Array(buffer, 0, bytesRead);
+            console.error("把数据放入一次循环", buffer.byteLength)
+            NapiBuffer.addUsbStream(data, bytesRead);
+            // 不再需要 setTimeout，直接继续循环
+          } else {
+            // 无数据时，主动让出控制权，避免 CPU 空转
+            await new Promise<void>(resolve => setTimeout(resolve, 1));
+          }
+        } catch (error) {
+          console.error('worker线程错误:', error, error.code);
+          // 判断是否可恢复错误
+          let isRecoverable = false;
+          if (error && typeof error === 'object') {
+            const errObj = error as ErrorWithCode;
+            if (errObj.code === 'EAGAIN' || errObj.code === 'EWOULDBLOCK') {
+              isRecoverable = true;
+            }
+          }
+          if (isRecoverable) {
+            // 等待后重试
+            await new Promise<void>(resolve => setTimeout(resolve, 10));
+            continue; // 继续循环
+          } else {
+            // 致命错误，停止读取
+            isReading = false;
+            break;
           }
         }
-        if (isRecoverable) {
-          // 等待后重试
-          await new Promise<void>(resolve => setTimeout(resolve, 10));
-          continue; // 继续循环
-        } else {
-          // 致命错误，停止读取
-          isReading = false;
-          break;
-        }
       }
-    }
-  })(); // 立即执行
+    })(); // 立即执行
+  }catch (error){
+    console.error('worker线程错误:', error, error.code);
+  }
+
 }
 
 // 停止读取

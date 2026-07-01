@@ -35,8 +35,7 @@ export class VideoStreamHandle {
     return VideoStreamHandle.instance;
   }
 
-  public  setCreate(isCreate: boolean) {
-    console.log('初始化视频解码器——————-'+this.isCreate)
+  public setCreate(isCreate: boolean) {
     this.isCreate = isCreate;
   }
 
@@ -58,7 +57,6 @@ export class VideoStreamHandle {
         duration: 2000,  // 显示时长（毫秒）
         bottom: '50vp'   // 距屏幕底部距离
       });*/
-      console.log('初始化视频解码器'+!this.isCreate)
       if (!this.isCreate) {
 
         this.isCreate_f(true);
@@ -69,7 +67,6 @@ export class VideoStreamHandle {
         // 初始化解码器
         // initDecode();
         // 主线程
-
 
         this.worker.onmessage = (e: MessageEvents) => {
           if (e.data.type == "isCreate") {
@@ -92,7 +89,6 @@ export class VideoStreamHandle {
   }
 
   public isCreate_f(b:boolean) {
-    console.log('初始化视频解码器——————-'+this.isCreate)
     this.isCreate = b
     this.worker.postMessage({
       type: "isCreate",
@@ -100,12 +96,10 @@ export class VideoStreamHandle {
     });
   }
 
-
   public getFetchFrame() {
     this.setRequestIFrame();
     this.onFetchFrame();
   }
-
 
   /**
    * 设置是否请求关键帧
@@ -268,7 +262,7 @@ export class VideoStreamHandle {
   public addVideoStream(data: Uint8Array, length: number) {
     try {
       // 检查系统是否已经初始化，如果没有初始化则记录错误并返回
-      console.log("添加数据", this.isCreate, PlayInfo.is872());
+     // console.log("添加数据", this.isCreate, PlayInfo.is872());
       if (!this.isCreate) {
         console.log("请先初始化 addVideoStream"); // 使用日志工具记录错误信息
         return;

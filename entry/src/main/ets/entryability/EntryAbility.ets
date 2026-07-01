@@ -97,6 +97,7 @@ export default class EntryAbility extends UIAbility {
 
     //注册全局崩溃日志
     this.registerId = errorManager.on("error", crashObserver);
+    LogManager.getInstance().info('\n', '\n--------------------------')
     LogManager.getInstance().info("进入app", "初始化成功");
 
     DatabaseManager.getInstance().init(this.context)
@@ -152,7 +153,7 @@ export default class EntryAbility extends UIAbility {
     // 绑定本地端口（可选，根据需求配置）
     // 3. 注册接收数据回调（用于接收服务器响应）
     this.udpSocket.on('message', (packet: socket.SocketMessageInfo) => {
-     // console.error(`收到来UDP数据：${ObjectUtils.arrayBufferToHex(packet.message)}==========+${new Uint8Array(packet.message)}`);
+      // console.error(`收到来UDP数据：${ObjectUtils.arrayBufferToHex(packet.message)}==========+${new Uint8Array(packet.message)}`);
       // 处理接收到的数据（如解析、展示等）
 
       //处理收到UDP数据
@@ -355,7 +356,7 @@ export default class EntryAbility extends UIAbility {
 
   private onHandleDataListener: OnHandleDataListener = {
     onHandleData: (connectionType: ConnectionType, devTypes: ExternalDevType, data: Uint8Array) => {
-     // console.log(`处理数据 - 连接类型: ${connectionType}, 设备类型: ${devTypes}, 数据: ${ObjectUtils.arrayBufferToHex(data)}`);
+      // console.log(`处理数据 - 连接类型: ${connectionType}, 设备类型: ${devTypes}, 数据: ${ObjectUtils.arrayBufferToHex(data)}`);
       // 这里可以添加具体的数据处理逻辑
       // 示例：根据连接类型和设备类型进行不同处理
       switch (connectionType) {
@@ -381,7 +382,7 @@ export default class EntryAbility extends UIAbility {
     // 检查mDeviceTypeService是否为null，或者是否已经关闭或终止
     this.mDeviceTaskId = setInterval(() => {
       // 如果设备未连接，则尝试获取设备类型
-      console.log(`类型检测任务正在执行:${PlayInfo.firmwareVer}:${!this.hasDevice()}:${PlayInfo.deviceId}:${PlayInfo.deviceType}`)
+      // console.log(`类型检测任务正在执行:${PlayInfo.firmwareVer}:${!this.hasDevice()}:${PlayInfo.deviceId}:${PlayInfo.deviceType}`)
       if (!this.hasDevice()) {
         WifiCommandHelper.getDevType();
         // HisiCommandHelper.getDevType();
@@ -432,13 +433,13 @@ export default class EntryAbility extends UIAbility {
         return;
       }
     });
-/*    // 2. 显示配件信息
-    console.log(USBAccessoryCommunicator.getInstance().getAccessoryInfo());
-    promptAction.showToast({
-      message: '配件信息' + USBAccessoryCommunicator.getInstance().getAccessoryInfo(),
-      duration: 2000, // 显示时长（毫秒）
-      bottom: '50vp'   // 距屏幕底部距离
-    });*/
+    /*    // 2. 显示配件信息
+        console.log(USBAccessoryCommunicator.getInstance().getAccessoryInfo());
+        promptAction.showToast({
+          message: '配件信息' + USBAccessoryCommunicator.getInstance().getAccessoryInfo(),
+          duration: 2000, // 显示时长（毫秒）
+          bottom: '50vp'   // 距屏幕底部距离
+        });*/
     USBAccessoryCommunicator.getInstance().setonHandleDataListener(this.onHandleDataListener)
 
   }
@@ -508,7 +509,7 @@ export default class EntryAbility extends UIAbility {
       }
       if (ProtocolManager.getInstance().hasProtocol()) {
         DroneCodeManager.getInstance().setProtocol(ProtocolManager.getInstance().getProtocol());
-       // console.log("无人机协议", ProtocolManager.getInstance().getNewProtocolName());
+        // console.log("无人机协议", ProtocolManager.getInstance().getNewProtocolName());
         let parse = ParseUtils.newInstance(ProtocolManager.getInstance().getProtocol());
         if (parse != null) {
           let packet: MessagePacket | null;

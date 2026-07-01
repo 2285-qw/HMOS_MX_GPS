@@ -50,24 +50,14 @@ export struct VideoPage {
 
               this.surfaceId = surfaceId;
 
-
-              let state = "";
-              console.warn("解码类型", PlayInfo.streamType)
-              if (PlayInfo.streamType == StreamType.H264
-                || PlayInfo.streamType == StreamType.H264_VGA
-                || PlayInfo.streamType == StreamType.YUV) {
-                // 初始化h264 解码器
-                // const success = NapiBuffer.initialize('video/avc', 1280, 720);
-                console.log("初始化解码类型h264")
-                state = 'video/avc';
-              } else {
-                // 初始化h265 解码器
-                state = 'video/hevc';
-                console.log("初始化解码类型h265")
-              }
+              const isH264 = [StreamType.H264, StreamType.H264_VGA, StreamType.YUV].includes(PlayInfo.streamType);
+              let state = isH264 ? 'video/avc' : 'video/hevc';
+              console.log(`初始化解码类型${isH264 ? 'h264' : 'h265'}+${PlayInfo.streamType}`);
               //state = 'video/hevc';
               // state = 'video/avc';
               // 1. 初始化解码器
+              state='video/avc'
+              console.log(`初始化解码类型${state}`);
               const success = NapiBuffer.initialize(state, 1280, 720);
               if (!success) {
                 console.error('解码器初始化失败');

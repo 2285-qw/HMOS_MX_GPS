@@ -10,10 +10,11 @@
       "path": "./src/main/cpp/CMakeLists.txt",
       "abiFilters": [
         "arm64-v8a",
-        "x86_64"
+        //"x86_64"
       ],
       "arguments": "",
-      "cppFlags": "",
+      "cppFlags": "-g",
+
     },
     "sourceOption": {
       "workers": [
@@ -21,7 +22,7 @@
         './src/main/ets/workers/UsbBufWorker.ets',
         './src/main/ets/workers/getUsbWorker.ets'
       ]
-    }
+    },
   },
   "buildOptionSet": [
     {

@@ -82,9 +82,7 @@ bool HmosVideoDecoder::initialize(const std::string &mimeType, int32_t width, in
     height_ = height;
     mimeType_ = mimeType;
 
-    LOGI("初始化解码器: %{public}s,%{public}dx%{public}d", mimeType.c_str(), width, height);
-    LOGI("初始化解码器: %{public}s,%{public}dx%{public}d", mimeType.c_str(), width_, height_);
-  LOGI("配置解码器参数====2222: %{public}dx%{public}d", width_, height_);
+    LOGI("配置解码器参数====2222: %{public}dx%{public}d", width_, height_);
     // 根据MIME类型选择对应的常量
     const char *mimeConst = nullptr;
     if (mimeType == "video/avc") {
@@ -130,9 +128,7 @@ bool HmosVideoDecoder::initialize(const std::string &mimeType, int32_t width, in
         started_ = true;
         return true;
     }
-  LOGI("初始化解码器====: %{public}s,%{public}dx%{public}d", mimeType.c_str(), width_, height_);
     // 配置解码器
-    LOGI("配置解码器参数====1111: %{public}dx%{public}d", width_, height_);
     if (!configureDecoder()) {
         LOGE("Failed to configure decoder");
         OH_VideoDecoder_Destroy(decoder_);
@@ -417,18 +413,19 @@ void HmosVideoDecoder::OnStreamChanged(OH_AVCodec *codec, OH_AVFormat *format, v
     HmosVideoDecoder *decoder = static_cast<HmosVideoDecoder *>(userData);
     if (format && decoder) {
         int32_t width = 0, height = 0, pixelFormat = 0;
-     /*   OH_AVFormat_GetIntValue(format, OH_MD_KEY_WIDTH, &width);
-        OH_AVFormat_GetIntValue(format, OH_MD_KEY_HEIGHT, &height);
-        OH_AVFormat_GetIntValue(format, OH_MD_KEY_PIXEL_FORMAT, &pixelFormat);*/
-        
-          // 2. 获取图像的真实有效尺寸 (关键!)
+        /*   OH_AVFormat_GetIntValue(format, OH_MD_KEY_WIDTH, &width);
+           OH_AVFormat_GetIntValue(format, OH_MD_KEY_HEIGHT, &height);
+           OH_AVFormat_GetIntValue(format, OH_MD_KEY_PIXEL_FORMAT, &pixelFormat);*/
+
+        // 2. 获取图像的真实有效尺寸 (关键!)
         OH_AVFormat_GetIntValue(format, OH_MD_KEY_VIDEO_PIC_WIDTH, &width);
         OH_AVFormat_GetIntValue(format, OH_MD_KEY_VIDEO_PIC_HEIGHT, &height);
-        
+
         OH_AVFormat_GetIntValue(format, OH_MD_KEY_PIXEL_FORMAT, &pixelFormat);
 
         LOGI("Output format changed: %{public}dx%{public}d, pixel format: %{public}d", width, height, pixelFormat);
-         LOGI("Output format changed: %{public}dx%{public}d, pixel format: %{public}d",  decoder->width_,  decoder->height_, pixelFormat);
+        LOGI("Output format changed: %{public}dx%{public}d, pixel format: %{public}d", decoder->width_,
+             decoder->height_, pixelFormat);
 
         // 更新解码器尺寸
         decoder->width_ = width;
@@ -441,12 +438,10 @@ void HmosVideoDecoder::OnStreamChanged(OH_AVCodec *codec, OH_AVFormat *format, v
 }
 
 void HmosVideoDecoder::OnInputBufferAvailable(OH_AVCodec *codec, uint32_t index, OH_AVBuffer *buffer, void *userData) {
-
-    LOGI("解码输入回调index=%{public}u", index);
+    
     HmosVideoDecoder *decoder = static_cast<HmosVideoDecoder *>(userData);
     if (decoder) {
         LOGD("解码存入缓冲区得可用索引: index=%{public}u", index);
-
         AvailableBuffer availBuffer;
         availBuffer.index = index;
         availBuffer.buffer = buffer;
@@ -461,11 +456,10 @@ void HmosVideoDecoder::OnInputBufferAvailable(OH_AVCodec *codec, uint32_t index,
 }
 
 void HmosVideoDecoder::OnOutputBufferAvailable(OH_AVCodec *codec, uint32_t index, OH_AVBuffer *buffer, void *userData) {
-    LOGD("解码输出回调OH_AVCodecOnNewOutputBuffer实现。");
     LOGI("解码输出回调OH_AVCodecOnNewOutputBuffer实现。");
     HmosVideoDecoder *decoder = static_cast<HmosVideoDecoder *>(userData);
     if (decoder) {
-        LOGD("Output buffer available in callback: index=%u", index);
+       // LOGD("Output buffer available in callback: index=%u", index);
 
         // 对于低版本，直接在回调中处理输出缓冲区
         if (decoder->isLowVersion_) {
@@ -620,29 +614,26 @@ void HmosVideoDecoder::handleOutputBufferInCallback(uint32_t index, OH_AVBuffer 
     framesDecoded_++;
 
     if (surface_) {
-       /* // 先拷贝数据（如果需要）
-        VideoFramePtr frame = createVideoFrameFromBuffer(index, buffer);
-        if (frame) {
-            std::lock_guard<std::mutex> lock(frameMutex_);
-            decodedFrames_.push_back(frame);
-            outputCond_.notify_one();
-        }*/
+        /* // 先拷贝数据（如果需要）
+         VideoFramePtr frame = createVideoFrameFromBuffer(index, buffer);
+         if (frame) {
+             std::lock_guard<std::mutex> lock(frameMutex_);
+             decodedFrames_.push_back(frame);
+             outputCond_.notify_one();
+         }*/
         // Surface模式：直接在回调中渲染
         int32_t ret = OH_VideoDecoder_RenderOutputBuffer(decoder_, index);
-        LOGE("urface模式22222222222");
         if (ret != AV_ERR_OK) {
             LOGE("Failed to render output buffer: %d", ret);
         } else {
             framesRendered_++;
-            LOGD("Rendered frame to surface in callback: index=%u", index);
+            LOGD("在回调用通过urface模式渲染: index=%u", index);
         }
-
         // 释放输出缓冲区
         OH_VideoDecoder_FreeOutputBuffer(decoder_, index);
     } else {
         // 内存模式：在回调中创建VideoFrame
         VideoFramePtr frame = createVideoFrameFromBuffer(index, buffer);
-
         LOGE("urface模式 false");
         if (frame) {
             LOGE("urface模式 false 111");
@@ -659,7 +650,6 @@ void HmosVideoDecoder::handleOutputBufferInCallback(uint32_t index, OH_AVBuffer 
             LOGI("decodedFrames_ size = %{public}zu", decodedFrames_.size());
             //}
         }
-
         // 释放输出缓冲区
         OH_VideoDecoder_FreeOutputBuffer(decoder_, index);
     }
@@ -685,9 +675,9 @@ VideoFramePtr HmosVideoDecoder::createVideoFrameFromBuffer(uint32_t index, OH_AV
 
     // 获取输出格式
     OH_AVFormat *outputFormat = OH_VideoDecoder_GetOutputDescription(decoder_);
-    
 
-    int32_t width = width_, height = height_, pixelFormat = AV_PIXEL_FORMAT_NV12;
+
+    int32_t width = width_, height = height_, pixelFormat = AV_PIXEL_FORMAT_YUVI420;
     if (outputFormat) {
         OH_AVFormat_GetIntValue(outputFormat, OH_MD_KEY_WIDTH, &width);
         OH_AVFormat_GetIntValue(outputFormat, OH_MD_KEY_HEIGHT, &height);
@@ -730,14 +720,12 @@ bool HmosVideoDecoder::configureDecoder() {
     if (!decoder_ || configured_) {
         return false;
     }
-    LOGD("解码执行configureDecoder");
     // 创建媒体格式
     format_ = OH_AVFormat_Create();
     if (!format_) {
         LOGE("Failed to create format");
         return false;
     }
-    LOGD("解码执行configureDecoder11111");
 
     // 设置媒体格式参数
     const char *mimeConst = mimeType_.c_str();
@@ -746,12 +734,13 @@ bool HmosVideoDecoder::configureDecoder() {
     } else if (mimeType_ == "video/hevc") {
         mimeConst = OH_AVCODEC_MIMETYPE_VIDEO_HEVC;
     }
-  LOGI("配置解码器参数====: %{public}dx%{public}d", width_, height_);
     OH_AVFormat_SetStringValue(format_, OH_MD_KEY_CODEC_MIME, mimeConst);
     OH_AVFormat_SetIntValue(format_, OH_MD_KEY_WIDTH, width_);
     OH_AVFormat_SetIntValue(format_, OH_MD_KEY_HEIGHT, height_);
-     LOGI("配置解码器参数: %{public}dx%{public}d", width_, height_);
-    // OH_AVFormat_SetIntValue(format_, OH_MD_KEY_PIXEL_FORMAT, AV_PIXEL_FORMAT_NV21);
+    LOGI("配置解码器参数: %{public}dx%{public}d", width_, height_);
+    // AV_PIXEL_FORMAT_YUVI420
+    // AV_PIXEL_FORMAT_NV21
+    //  OH_AVFormat_SetIntValue(format_, OH_MD_KEY_PIXEL_FORMAT, AV_PIXEL_FORMAT_YUVI420);
 
     // 配置解码器
     int32_t ret = OH_VideoDecoder_Configure(decoder_, format_);
@@ -761,10 +750,7 @@ bool HmosVideoDecoder::configureDecoder() {
         format_ = nullptr;
         return false;
     }
-    LOGD("解码执行configureDecoder2222222");
-
     configured_ = true;
-    LOGI("Decoder configured successfully");
     return true;
 }
 

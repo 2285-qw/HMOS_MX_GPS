@@ -14,7 +14,7 @@ let fileDescriptor: number = -1;
 // 注册onmessage回调，当Worker线程收到来自其宿主线程通过postMessage接口发送的消息时被调用，在Worker线程执行
 workerPort.onmessage = (e: MessageEvents) => {
   if (e.data.type == "isCreate") {
-    VideoStreamHandle.getInstance().setCreate(e.data.data)
+   VideoStreamHandle.getInstance().setCreate(e.data.data)
   } else if (e.data.type == "onFetchFrame") {
     VideoStreamHandle.getInstance().getFetchFrame(); // 在子线程执行核心方法
   }

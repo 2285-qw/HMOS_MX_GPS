@@ -19,6 +19,10 @@
 #include "usb_loop_manager.h"
 #include <unistd.h>
 
+/*#include "my_stitcher.h"
+#include <opencv2/stitching.hpp>
+#include <opencv2/opencv.hpp>*/
+
 #undef LOG_DOMAIN
 #undef LOG_TAG
 #define LOG_DOMAIN 0x3200 // 全局domain宏，标识业务领域
@@ -218,7 +222,6 @@ napi_value FHLoopManager::getVideoOneFrameArray(napi_env env, napi_callback_info
         napi_throw_error(env, nullptr, "Missing array parameter");
         return nullptr;
     }
-    OH_LOG_FATAL(LOG_APP, "获取针数据22222");
     for (uint32_t i = 0; i < 7; ++i) {
         // 5.1 获取数组当前索引的元素（napi_value 类型）
         napi_value elem;
@@ -256,7 +259,6 @@ napi_value FHLoopManager::getVideoOneFrameArray(napi_env env, napi_callback_info
     bool etsBoolean = false; // 存储提取的布尔值（默认false）
     napi_valuetype argType;
     status = napi_get_value_bool(env, args[1], &etsBoolean);
-    OH_LOG_FATAL(LOG_APP, "getVideoOneFrameArray_进入");
     // 检查帧连续性
     if (etsBoolean) {
         // 如果当前不是I帧且需要I帧跳过显示
@@ -277,7 +279,6 @@ napi_value FHLoopManager::getVideoOneFrameArray(napi_env env, napi_callback_info
             void *buffer_ptr = nullptr;
             napi_status status = napi_create_arraybuffer(env, 5, &buffer_ptr, &array_buffer);
             if (status != napi_ok) {
-                OH_LOG_FATAL(LOG_APP, "getVideoOneFrameArray_类型不对");
                 napi_throw_error(env, nullptr, "Failed to create ArrayBuffer");
                 OH_LOG_FATAL(LOG_APP, "getVideoOneFrameArray_类型不对");
                 return nullptr;
@@ -308,7 +309,6 @@ napi_value FHLoopManager::getVideoOneFrameArray(napi_env env, napi_callback_info
 
     // 复制数据到ArrayBuffer
     memcpy(buffer_ptr, FHLoopManager::GetInstance().pVideoFrame.get(), len);
-    OH_LOG_ERROR(LOG_APP, "getVideoOneFrameArray_成功放回数据");
     return array_buffer;
 }
 static napi_value CreateFixedArrayBuffer(napi_env env, napi_callback_info info) {
@@ -333,7 +333,6 @@ static napi_value CreateFixedArrayBuffer(napi_env env, napi_callback_info info) 
 
     // 复制固定数据到ArrayBuffer
     memcpy(bufferPtr, fixedData, dataLength);
-    OH_LOG_INFO(LOG_APP, "ArrayBuffer created with length: %{public}zu", dataLength);
     return arrayBuffer;
 }
 
@@ -762,25 +761,21 @@ static void FreeGlobalDecoder() {
 static napi_value Initialize(napi_env env, napi_callback_info info) {
     size_t argc = 3;
     napi_value args[3];
-
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
 
     if (argc < 3) {
         napi_throw_error(env, nullptr, "Wrong number of arguments");
         return nullptr;
     }
-
     // 保存当前环境
     g_decoderContext.currentEnv = env;
 
     // 初始化全局解码器
     InitGlobalDecoder();
-
     if (!g_decoderContext.decoder) {
         napi_throw_error(env, nullptr, "Failed to create decoder");
         return nullptr;
     }
-
     // 获取参数
     char mimeType[256];
     size_t mimeTypeLength;
@@ -789,7 +784,7 @@ static napi_value Initialize(napi_env env, napi_callback_info info) {
     int32_t width, height;
     napi_get_value_int32(env, args[1], &width);
     napi_get_value_int32(env, args[2], &height);
-
+ LOGI("初始化111111111888");
     // 调用解码器初始化
     bool success = g_decoderContext.decoder->initialize(std::string(mimeType), width, height);
     g_decoderContext.isInitialized = success;
@@ -987,12 +982,12 @@ static napi_value DecodeFrameTypedArray(napi_env env, napi_callback_info info) {
     void *bufferData = nullptr;
     size_t length = 0;
     uint32_t flags = AVCODEC_BUFFER_FLAGS_SYNC_FRAME | AVCODEC_BUFFER_FLAGS_CODEC_DATA;
-    OH_LOG_ERROR(LOG_APP, "解码一帧数据=%{public}s", isTypedArray ? "yes" : "no");
+    OH_LOG_INFO(LOG_APP, "解码一帧数据=%{public}s", isTypedArray ? "yes" : "no");
     // 获取第三个数据 是否i帧
     bool isI = false; // 存储提取的布尔值（默认false）
 
     napi_status status = napi_get_value_bool(env, args[2], &isI);
-    OH_LOG_ERROR(LOG_APP, "解码一帧数据= 是否关键帧%{public}s", isI ? "yes" : "no");
+    OH_LOG_INFO(LOG_APP, "解码一帧数据= 是否关键帧%{public}s", isI ? "yes" : "no");
     if (isTypedArray) {
         napi_typedarray_type type;
         napi_value buffer;
@@ -1043,7 +1038,7 @@ static napi_value DecodeFrameTypedArray(napi_env env, napi_callback_info info) {
     timestamp = (uint64_t)tv.tv_sec * 1000000 + tv.tv_usec;
 
 
-    LOGI("时间戳数据C层, timestamp=%{public}lld,", timestamp);
+    //LOGI("时间戳数据C层, timestamp=%{public}lld,", timestamp);
     // 调用解码
     bool success = g_decoderContext.decoder->decodeFrame(static_cast<uint8_t *>(bufferData), length, timestamp,
                                                          flags // 传递标志
@@ -1053,7 +1048,6 @@ static napi_value DecodeFrameTypedArray(napi_env env, napi_callback_info info) {
     // 返回结果
     napi_value result;
     napi_get_boolean(env, success, &result);
-    OH_LOG_ERROR(LOG_APP, "解码一帧数据=null 走完");
     return result;
 }
 
@@ -1537,6 +1531,72 @@ static napi_value StopRecording(napi_env env, napi_callback_info info) {
     g_decoderContext.decoder->StopRecording();
     return nullptr;
 }
+
+
+/*static napi_value ImageStitch(napi_env env, napi_callback_info info) {
+    size_t argc = 2;
+    napi_value args[2];
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+
+    if (argc < 2) {
+        napi_throw_error(env, nullptr, "Expected 2 arguments");
+        return nullptr;
+    }
+
+    bool isArray = false;
+    napi_is_array(env, args[0], &isArray);
+    if (!isArray) {
+        napi_throw_error(env, nullptr, "First argument must be an array");
+        return nullptr;
+    }
+
+    uint32_t length = 0;
+    napi_get_array_length(env, args[0], &length);
+
+    std::vector<cv::Mat> images;
+    for (uint32_t i = 0; i < length; ++i) {
+        napi_value element;
+        napi_get_element(env, args[0], i, &element);
+
+        napi_valuetype type;
+        napi_typeof(env, element, &type);
+        if (type != napi_string) {
+            napi_throw_error(env, nullptr, "Array element must be string");
+            return nullptr;
+        }
+
+        size_t strLen = 0;
+        napi_get_value_string_utf8(env, element, nullptr, 0, &strLen);
+        std::string path;
+        path.resize(strLen + 1);
+        napi_get_value_string_utf8(env, element, &path[0], strLen + 1, &strLen);
+        path.resize(strLen);
+
+        // 正确读取图像
+        cv::Mat mat = cv::imread(path, cv::IMREAD_COLOR);
+        if (mat.empty()) {
+            napi_throw_error(env, nullptr, ("Failed to read image: " + path).c_str());
+            return nullptr;
+        }
+        images.push_back(std::move(mat));
+    }
+
+    // 获取保存路径
+    size_t saveLen = 0;
+    napi_get_value_string_utf8(env, args[1], nullptr, 0, &saveLen);
+    std::string savePath;
+    savePath.resize(saveLen + 1);
+    napi_get_value_string_utf8(env, args[1], &savePath[0], saveLen + 1, &saveLen);
+    savePath.resize(saveLen);
+
+    // 调用拼接函数（注意 .c_str() 转换）
+    int result = stitch(images, savePath.c_str());
+
+    napi_value ret;
+    napi_create_int32(env, result, &ret);
+    return ret;
+}*/
+
 
 
 EXTERN_C_START

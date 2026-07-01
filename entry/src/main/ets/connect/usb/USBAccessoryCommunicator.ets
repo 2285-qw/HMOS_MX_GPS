@@ -160,6 +160,19 @@ export class USBAccessoryCommunicator {
    */
   private async openAccessory(accessory: usbManager.USBAccessory): Promise<usbManager.USBAccessoryHandle | null> {
     try {
+      // 1. 获取当前已连接的配件列表
+      let accList: usbManager.USBAccessory[] = usbManager.getAccessoryList();
+      // 2. 如果列表不为空，说明有已连接的配件
+      if (accList.length !== 0) {
+        let aoaDevice = accList[0];
+        // 3. (可选) 尝试重新获取操作权限
+        let flag = await usbManager.requestAccessoryRight(aoaDevice);
+        // 4. 打开这个配件以获得操作句柄
+        let handle = usbManager.openAccessory(aoaDevice);
+        // 5. 关键步骤：立即关闭它，释放资源
+        usbManager.closeAccessory(handle);
+        console.log('已关闭之前的配件连接');
+      }
       const handle = usbManager.openAccessory(accessory);
       console.log(`配件打开成功，文件描述符: ${handle.accessoryFd}`);
       return handle;
@@ -189,7 +202,7 @@ export class USBAccessoryCommunicator {
         length: data.length
       });
 
-      console.log(`向配件发送 ${bytesWritten} 字节数据`);
+      //console.log(`向配件发送 ${bytesWritten} 字节数据`);
       return bytesWritten;
 
     } catch (error) {
@@ -291,16 +304,16 @@ export class USBAccessoryCommunicator {
         } else if (header[2] == 0x06) {
           //udp连接类型
           const uint8Array = new Uint8Array(newData);
-        /*  console.log("收到udp数据", "uint8Array=" + ObjectUtils.arrayBufferToHex(uint8Array),
-            this.onHandleDataListener);*/
+          /*  console.log("收到udp数据", "uint8Array=" + ObjectUtils.arrayBufferToHex(uint8Array),
+              this.onHandleDataListener);*/
           this.onHandleDataListener?.onHandleData(ConnectionType.UDP, ExternalDevType.USB, uint8Array)
         } else if (header[2] == 0x05) {
           //TCP连接类型
           // DeviceInfoManager.getInstance().processDeviceInfo(newData)
           const uint8Array = new Uint8Array(newData);
           this.onHandleDataListener?.onHandleData(ConnectionType.TCP, ExternalDevType.USB, uint8Array)
-          console.log("收到TCP数据", "uint8Array=" + ObjectUtils.arrayBufferToHex(uint8Array),
-            this.onHandleDataListener);
+        /*  console.log("收到TCP数据", "uint8Array=" + ObjectUtils.arrayBufferToHex(uint8Array),
+            this.onHandleDataListener);*/
         }
       }
     }
@@ -454,12 +467,12 @@ export class USBAccessoryCommunicator {
    * 关闭配件连接
    */
   close(): void {
-    LogManager.getInstance().info("usb配件",'配件断开')
-  /*  promptAction.showToast({
-      message: '配件断开',
-      duration: 2000, // 显示时长（毫秒）
-      bottom: '50vp'   // 距屏幕底部距离
-    });*/
+    LogManager.getInstance().info("usb配件", '配件断开')
+    /*  promptAction.showToast({
+        message: '配件断开',
+        duration: 2000, // 显示时长（毫秒）
+        bottom: '50vp'   // 距屏幕底部距离
+      });*/
     // this.onDeviceConnectionListener?.onDeviceDisconnection(ExternalDevType.USB)
 
     if (this.accessoryHandle) {
@@ -515,18 +528,18 @@ export class USBAccessoryCommunicator {
   // 开启心跳定时器
   async startHeartbeat() {
     if (!this.isConnected || !this.accessoryHandle || this.accessoryHandle.accessoryFd <= 0) {
-      promptAction.showToast({
+    /*  promptAction.showToast({
         message: '开启心跳定时器失败' + this.accessoryHandle + '===' + this.isConnected,
         duration: 2000, // 显示时长（毫秒）
         bottom: '50vp'   // 距屏幕底部距离
-      });
+      });*/
       return
     }
-    promptAction.showToast({
+  /*  promptAction.showToast({
       message: '开启心跳定时器',
       duration: 2000, // 显示时长（毫秒）
       bottom: '50vp'   // 距屏幕底部距离
-    });
+    });*/
 
 
     this.heartbeatTimer = setInterval(() => {

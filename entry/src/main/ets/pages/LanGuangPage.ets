@@ -453,7 +453,9 @@ struct LanGuangPage {
         })
 
         //左侧底部指北针
-        CompassView()
+        CompassView({
+          PlaneAngle: this.nowPlaneAngle
+        })
           .margin({ left: 30 })
           .alignRules({
             // 垂直居中
@@ -877,7 +879,7 @@ struct LanGuangPage {
           break
         case MoreType.THERMAL_IMAGING:
           //热成想
-          if (this.getTypeIsSelected(MoreType.THERMAL_IMAGING)) {
+          if (!this.getTypeIsSelected(MoreType.THERMAL_IMAGING)) {
             this.setTypeSelected(MoreType.THERMAL_IMAGING, false);
             ImageSettingParams.setWb(ImageSettingParams.to100ToMax(0, 255))
             ImageSettingParams.setContrast(ImageSettingParams.to100ToMax(50, 1023))
@@ -1326,7 +1328,7 @@ struct LanGuangPage {
       case LanGuangObserver.TYPE_DRONE_STATUS:
         // 解析无人机状态数据为LGPlaneHyBean
         const lgPlaneHyBean: LGPlaneHyBean = LanGuangAnalysis.getInstance().parseDroneStatus(data);
-        console.log(`无人机状态数据: ${JSON.stringify(lgPlaneHyBean)}`);
+        //console.log(`无人机状态数据: ${JSON.stringify(lgPlaneHyBean)}`);
         const gpsValue = lgPlaneHyBean.GpsNum;
 
         if (gpsValue >= 20) {
@@ -1448,6 +1450,7 @@ struct LanGuangPage {
         }
         this.remote_control_p_t = sjHyInfo9CBean.BatVal / 100 + "V"
         this.drone_p_t = sjHyInfo9CBean.RmoteVol + '%'
+
 
         console.log(`SJHyInfo9CBean: ${JSON.stringify(sjHyInfo9CBean)}`, data.length);
         break

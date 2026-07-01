@@ -45,7 +45,7 @@ export struct Data {
   @State data: SettingData = new SettingData();
   callback: SettingCallback | null = null;
   private dialogCtrl?: CustomDialogController
-  public static setting:number=20001;//围栏设置成功通知
+  public static setting: number = 20001; //围栏设置成功通知
 
   /**
    * 构建UI
@@ -73,11 +73,11 @@ export struct Data {
               this.data.flightAltitude = this.data.mflightAltitude; //飞行高度
             }
           })
-      }.width('100%').justifyContent(FlexAlign.SpaceBetween)
+      }.width('100%').justifyContent(FlexAlign.SpaceBetween).visibility(Visibility.None)
 
       //飞行距离
       Row() {
-        Column() {
+        Row() {
           Text('飞行距离')
             .fontColor('#ffffff')
             .fontSize(16)
@@ -86,7 +86,8 @@ export struct Data {
             .fontColor('#A5A5A5')
             .fontSize(10)
         }.justifyContent(FlexAlign.Start)
-        .alignItems(HorizontalAlign.Start)
+
+        // .alignItems(HorizontalAlign.Start)
 
         Row() {
           Slider({
@@ -108,24 +109,29 @@ export struct Data {
             .fontSize(16)
             .width(40)
             .height(28)
-            .backgroundColor('#909497')
             .textAlign(TextAlign.Center)
             .borderRadius(4)
-        }.margin({ top: 10 }).width('70%').justifyContent(FlexAlign.SpaceBetween)
-      }.justifyContent(FlexAlign.SpaceBetween).width("100%")
+        }.margin({ top: 10 }).width('50%').justifyContent(FlexAlign.Center)
+      }
+      .justifyContent(FlexAlign.SpaceBetween)
+      .width("100%")
+      .visibility(Visibility.None)
+      .justifyContent(FlexAlign.Center)
 
       //飞行高度
       Row() {
-        Column() {
+        Row() {
           Text('飞行高度')
             .fontColor('#ffffff')
             .fontSize(16)
+            .width(150)
 
           Text(`默认${this.data.mflightAltitude}m(${this.data.minflightAltitude}m-${this.data.maxflightAltitude}m)`)
             .fontColor('#A5A5A5')
             .fontSize(10)
-        }.justifyContent(FlexAlign.Start)
-        .alignItems(HorizontalAlign.Start)
+        }.justifyContent(FlexAlign.Center)
+
+        //.alignItems(HorizontalAlign.Start)
 
         Row() {
           Slider({
@@ -147,24 +153,25 @@ export struct Data {
             .fontSize(16)
             .width(40)
             .height(28)
-            .backgroundColor('#909497')
             .textAlign(TextAlign.Center)
             .borderRadius(4)
-        }.margin({ top: 10 }).width('70%').justifyContent(FlexAlign.SpaceBetween)
-      }.justifyContent(FlexAlign.SpaceBetween).width("100%")
+        }.width('60%').justifyContent(FlexAlign.SpaceBetween).justifyContent(FlexAlign.Center)
+      }.justifyContent(FlexAlign.SpaceBetween).width("100%").justifyContent(FlexAlign.Center)
 
       //返航高度
       Row() {
-        Column() {
+        Row() {
           Text('返航高度')
             .fontColor('#ffffff')
             .fontSize(16)
+            .width(150)
 
           Text(`默认${this.data.mgoHomeDistance}m(${this.data.mingoHomeDistance}m-${this.data.maxgoHomeDistance}m)`)
             .fontColor('#A5A5A5')
             .fontSize(10)
-        }.justifyContent(FlexAlign.Start)
-        .alignItems(HorizontalAlign.Start)
+        }.justifyContent(FlexAlign.Center)
+
+        // .alignItems(HorizontalAlign.Start)
 
         Row() {
           Slider({
@@ -186,20 +193,24 @@ export struct Data {
             .fontSize(16)
             .width(40)
             .height(28)
-            .backgroundColor('#909497')
             .textAlign(TextAlign.Center)
             .borderRadius(4)
-        }.margin({ top: 10 }).width('70%').justifyContent(FlexAlign.SpaceBetween)
-      }.justifyContent(FlexAlign.SpaceBetween).width("100%")
+        }.width('60%').justifyContent(FlexAlign.SpaceBetween).justifyContent(FlexAlign.Center)
+      }.justifyContent(FlexAlign.SpaceBetween).width("100%").justifyContent(FlexAlign.Center)
 
 
+      Text('备注：返航高度不得大于飞行高度')
+        .fontColor('#ffffff')
+        .fontSize(18)
+        .margin({ top: 20 })
+        .width('100%')
       // 保存按钮
       Button('保存设置')
         .width(150)
         .height(40)
         .fontColor('#ffffff')
         .fontSize(15)
-        .backgroundColor('#4CAF50')
+        .backgroundColor('#ff3061fc')
         .borderRadius(8)
         .margin({ top: 20 })
         .onClick(() => {
@@ -221,6 +232,7 @@ export struct Data {
   aboutToAppear(): void {
 
     this.data.isBeginnerMode = PreferencesUtil.getData(PreferencesUtil.NOVICE, true) as boolean
+    this.data.isBeginnerMode = false
     this.data.goHomeDistance =
       PreferencesUtil.getData(PreferencesUtil.RETURN_ALTITUDE, PreferencesUtil.mgoHomeDistance) as number
     this.data.flightDistance =
@@ -230,7 +242,7 @@ export struct Data {
 
 
     // 持续订阅
-    emitter.on({ eventId:Data.setting  }, (eventData: emitter.GenericEventData<Uint8Array>) => {
+    emitter.on({ eventId: Data.setting }, (eventData: emitter.GenericEventData<Uint8Array>) => {
       // 基础吐司（默认2秒）
       promptAction.showToast({ message: "设置成功" });
 

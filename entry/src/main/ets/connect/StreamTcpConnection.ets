@@ -73,7 +73,7 @@ export class StreamTcpConnection extends TcpConnection {
     }
     this.tcpSocket?.on('message', (data: socket.SocketMessageInfo) => {
       // this.onHandleData(data.message.byteLength,new Uint8Array(data.message))
-      console.log("收到视频流数据", ObjectUtils.arrayBufferToHex(new Uint8Array(data.message)))
+      //console.log("收到视频流数据", ObjectUtils.arrayBufferToHex(new Uint8Array(data.message)))
       VideoStreamHandle.getInstance().addVideoStream(new Uint8Array(data.message), data.message.byteLength)
     })
   }

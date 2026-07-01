@@ -21,6 +21,7 @@ import { ProtocolManager } from '../macrochip/Drone/core/protocol/ProtocolManage
 import { ModeType, PageSendData } from '../macrochip/Drone/core/protocol/PageSendData';
 import { MessageWhat } from '../macrochip/constant/MessageWhat';
 import { ObjectUtil } from '@pura/harmony-utils';
+import { I420ImageSaver } from '../utils/I420ImageSaver';
 
 
 @Entry
@@ -37,7 +38,7 @@ export struct NewVideoPage {
     Column() {
       Image(this.currentFrame)
         .width(1280)          // 明确指定宽高
-        .height(736)
+        .height(720)
         .backgroundColor(Color.Red) // 如果屏幕出现红色方块，说明 Image 渲染了，但内容没画出来
         .objectFit(ImageFit.Contain)
     }
@@ -217,7 +218,7 @@ export struct NewVideoPage {
           // size 是必填项，必须明确宽高
           size: {
             width: 1280,
-            height: 736,
+            height: 720,
           },
           // pixelFormat 使用 PixelMapFormat 枚举
           pixelFormat: image.PixelMapFormat.NV12,
@@ -227,7 +228,15 @@ export struct NewVideoPage {
           alphaType: image.AlphaType.OPAQUE
         };
         let data = frame.data; // 例如绘制到 Canvas
-
+     /*   const now = new Date();
+        const timestampName = `${now.getFullYear()}${(now.getMonth() + 1).toString()
+          .padStart(2, '0')}${now.getDate()}_${now.getHours()}${(now.getMinutes()).toString()
+          .padStart(2, '0')}${now.getSeconds()}`;
+        const name = 'img_' + timestampName;
+        console.info('图片名称= ' + name);
+        // 保存到沙箱目录
+        const targetPath = `${getContext().filesDir}/Image/${name}.jpg`;
+        I420ImageSaver.saveToFile(data,1280,720,targetPath)*/
         try {
           // console.debug("data======",ObjectUtils.arrayBufferToHex(data))
           let pixelMap = image.createPixelMapSync(data.buffer, opts);
